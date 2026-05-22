@@ -1,5 +1,5 @@
 ---
-title: "Experimenting with coring and subcoring in Bourgneuf Bay"
+title: "Experimenting with coring and subcoring"
 author: "Lee, Chengfa Benjamin"
 date: "`r Sys.Date()`"
 output: bookdown::html_document2
@@ -48,17 +48,17 @@ All work belong to the [REWRITE project](https://rewriteproject.eu/).
 
 # Method
 
-## Sample collection
+## Sites
 
-The fieldwork was conducted in Bourgneuf Bay. Three replicates each were collected in the persistent seagrass meadow and a sandier area. All GPS positions were collected using the SW Maps version 3.0.14.3 [@SWMapsversion] on a Google Pixel 9.
+The first fieldwork was conducted in Bourgneuf Bay. Three replicates each were collected in the persistent seagrass meadow and a sandier area. All GPS positions were collected using the SW Maps version 3.0.14.3 [@SWMapsversion] on a Google Pixel 9.
 
-```{r samplingDesign}
+```{r samplingDesignBB/}
 #| echo: false
 #| error: false
 #| message: false
 #| warning: false
 
-stations <- read_sf('data/shp/photos.shp') %>%
+stations <- read_sf('data/BB/shp/photos.shp') %>%
   select(!PATH) %>%
   filter(!REMARKS %in% c('Mud_1', 'non-stable site'))
 
@@ -78,6 +78,13 @@ m.shp <- leaflet(stations) %>%
 m.shp
 ```
 
+
+Paimpol
+
+
+## Sample collection
+
+
 For each replicate, a 1-metre whole core and 1-metre subcoring core was collected. As the Russian peat corer has a sampling length of 50 cm, the 1-metre core was further split into two 50 cm samples, one at the 0-50 cm depth and the other at the 50-100 cm depth. Due to the spearhead design of the Russian peat corer, the 50-100 cm depth was sampled next to the 0-50 cm depth, rather than immediately below since the spearhead would have disrupted the area below during the coring process (Figures \@ref(fig:coringProcessMud) and \@ref(fig:coringProcessSand)). The subcoring core was sliced in the field at 10 cm per subcore and separated into different collection bags. Meanwhile, for the whole core approach, both top and bottom cores were mixed in a bucket and then transferred into a single, large collection bag. For the first and the second replicate in the sand area, the corer for the subcore could only go up to a depth of about 75 cm and 80 cm, respectively. As such, they were sampled to 70 cm and 80 cm, respectively, for both the subcore and whole core approaches to ensure consistency within a replicate (Figure \@ref(fig:coringProcessSand)).
 
 The samples were then transported to back to the laboratory and preserved in a 4 &deg;C fridge.
@@ -88,8 +95,8 @@ The samples were then transported to back to the laboratory and preserved in a 4
 #| message: false
 #| warning: false
 
-dir.photos <- list.files('data/photos') %>%
-  paste0('data/photos/', .)
+dir.photos <- list.files('data/BB/photos') %>%
+  paste0('data/BB/photos/', .)
 ```
 
 ```{r coringProcessMud}
@@ -102,9 +109,9 @@ dir.photos <- list.files('data/photos') %>%
 #| fig.show: 'hold'
 #| fig.cap: 'Sampled cores at the persistent seagrass meadow. Each row shows a set of replicate. The first two photographs on the left depicts the 0-50 cm and 50-100 cm cores for the subcore approach. The last two photographs on the right depicts the 0-50 m and 50-100 cm cores for the whole core approach.'
 
-dir.photos <- list.files('data/photos') %>%
+dir.photos <- list.files('data/BB/photos') %>%
   grep('Mud', ., value = TRUE) %>%
-  paste0('data/photos/', .) %>%
+  paste0('data/BB/photos/', .) %>%
   "["(c(4:1,8:5,12:9))
 
 knitr::include_graphics(dir.photos)
@@ -120,9 +127,9 @@ knitr::include_graphics(dir.photos)
 #| fig.show: 'hold'
 #| fig.cap: 'Sampled cores at the sandier area. Each row shows a set of replicate. The first two photographs on the left depicts the 0-50 cm and 50-100 cm cores for the subcore approach. The last two photographs on the right depicts the 0-50 m and 50-100 cm cores for the whole core approach. For the first and the second replicate, the corer for the subcore could only go up to a depth of about 75 cm and 80 cm, respectively. As such, they were sampled to 70 cm and 80 cm, respectively, for both the subcore and whole core approaches to ensure consistency within a replicate.'
 
-dir.photos <- list.files('data/photos') %>%
+dir.photos <- list.files('data/BB/photos') %>%
   grep('Sand', ., value = TRUE) %>%
-  paste0('data/photos/', .) %>%
+  paste0('data/BB/photos/', .) %>%
   "["(c(4:1,8:5,12:9))
 
 knitr::include_graphics(dir.photos)
@@ -163,7 +170,7 @@ This section will be updated when the work is completed.
 #| message: false
 #| warning: false
 
-csv.dbd <- read.csv('data/csv/Bourgneuf_bulkdensity.csv', sep = ';') %>%
+csv.dbd <- read.csv('data/BB/csv/Bourgneuf_bulkdensity.csv', sep = ';') %>%
   filter(!is.na(slice_id)) %>%
   select(!c(Photo_ID, REC_TIME, LATITUDE, LONGITUDE))
 
@@ -175,22 +182,22 @@ csv.dbd <- csv.dbd %>%
 
 ## Calculations
 csv.dbd <- csv.dbd %>%
-  mutate(rep_id = paste(ID, Method, sep = "_"),
+  mutate(rep_id = paste(id, Method, sep = "_"),
          # actual weight without bottle
          soil_wet_weight = wet_weight - bottle_weight,
          soil_dry_weight = dry_weight - bottle_weight,
          # dry bulk density
          dry_bulk_density = soil_dry_weight / 20
          ) %>%
-  separate(ID, c(NA, 'rep'), remove = FALSE)
+  separate(id, c(NA, 'rep'), remove = FALSE)
 
 csv.dbd.average <- csv.dbd %>%
   # summarise data
-  group_by(ID, rep_id, Method, substrate) %>%
+  group_by(id, rep_id, Method, substrate) %>%
   summarise(mean_soil_wet_weight = mean(soil_wet_weight), mean_soil_dry_weight = mean(soil_dry_weight), mean_dry_bulk_density = mean(dry_bulk_density), syringe_diameter = mean(syringe_diameter)) %>%
   ungroup() %>% 
   # calculate differences between slice & mix
-  group_by(ID) %>%
+  group_by(id) %>%
   mutate(# calculate absolute differences
     diff_mean_soil_wet_weight = diff(mean_soil_wet_weight), 
     diff_mean_soil_dry_weight = diff(mean_soil_dry_weight), 
@@ -221,10 +228,10 @@ csv.dbd <- {
   # include the averaged slice data for the purpose of plotting
   m <- csv.dbd.average %>%
     filter(Method == 'slice') %>%
-    select(ID, mean_soil_wet_weight, mean_soil_dry_weight, mean_dry_bulk_density) %>%
+    select(id, mean_soil_wet_weight, mean_soil_dry_weight, mean_dry_bulk_density) %>%
     rename_with(.fn = ~ gsub("mean_", "", .x), .cols = starts_with('mean_'))
   
-  j <- right_join(t, m, by = join_by(ID), relationship = 'many-to-one') %>%
+  j <- right_join(t, m, by = join_by(id), relationship = 'many-to-one') %>%
     mutate(Method = 'slice_averaged')
   
   rbind(csv.dbd, j)
@@ -235,7 +242,7 @@ csv.dbd$Method <- factor(csv.dbd$Method, levels = c('mix', 'slice', 'slice_avera
 csv.dbd$substrate <- str_to_title(csv.dbd$substrate)
 ```
 
-The difference in dry bulk density between the mixed whole core and the averaged slices ranged between `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:dryBulkDensityVerticalProfile)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average %>% filter(!ID == 'Sand_3') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
+The difference in dry bulk density between the mixed whole core and the averaged slices ranged between `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:dryBulkDensityVerticalProfile)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average %>% filter(!id == 'Sand_3') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
 
 ```{r dryBulkDensityVerticalProfile}
 #| echo: false
@@ -303,7 +310,7 @@ p.dbd.boxplot <- csv.dbd %>%
 p.dbd.boxplot.filt <- csv.dbd %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
-  filter(ID != 'Sand_3') %>%
+  filter(id != 'Sand_3') %>%
   ggplot(aes(x = substrate, y = dry_bulk_density, fill = Method)) +
   geom_boxplot() +
   geom_point(aes(colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
@@ -323,7 +330,7 @@ p.dbd.boxplot + p.dbd.boxplot.filt + plot_layout(guides = 'collect', axes = 'col
 #| warning: false
 
 csv.wide.dbd.slice <- csv.dbd %>%
-  group_by(ID) %>%
+  group_by(id) %>%
   filter(Method != 'Subcoring (averaged)') %>%
   select(slice_id, dry_bulk_density) %>%
   distinct() %>%
@@ -332,7 +339,7 @@ csv.wide.dbd.slice <- csv.dbd %>%
   ungroup()
 
 csv.wide.dbd.averaged <- csv.dbd %>%
-  group_by(ID) %>%
+  group_by(id) %>%
   filter(Method != 'Subcoring') %>%
   select(Method, dry_bulk_density) %>%
   distinct() %>%
@@ -342,7 +349,7 @@ csv.wide.dbd.averaged <- csv.dbd %>%
 
 ## t-test
 tTest.wide.slice <- csv.wide.dbd.slice %>%
-  select(-full, -ID) %>% 
+  select(-full, -id) %>% 
   pivot_longer(everything()) %>%
   select(-name) %>%
   t.test()
@@ -367,7 +374,7 @@ The median difference for the averaged slices to the mixed cores is `r csv.wide.
 # ylim.diff <- c(-45,45)
 
 # p.wide.slice <- csv.wide.dbd.slice %>%
-#   select(-full, -ID) %>% 
+#   select(-full, -id) %>% 
 #   pivot_longer(everything()) %>%
 #   ggplot(aes(y = value)) +
 #     geom_hline(yintercept = 0, colour = 'red') +
