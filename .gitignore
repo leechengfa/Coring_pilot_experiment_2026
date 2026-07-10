@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+
+## datasets that do not belong to me
+data/Freq_above_Laurent
+data/Candidate_areas
+gif
+Sample_planning.xlsx
