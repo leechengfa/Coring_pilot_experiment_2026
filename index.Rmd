@@ -1,8 +1,13 @@
 ---
-title: "Experimenting with coring and subcoring"
+title: "Pilot experiment with coring and subcoring"
 author: "Lee, Chengfa Benjamin"
 date: "`r Sys.Date()`"
-output: bookdown::html_document2
+output: 
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
 bibliography: references.bib 
 editor_options:
   chunk_output_type: inline
@@ -23,7 +28,9 @@ library(ggplot2)
 library(patchwork)
 ```
 
-This page explores the use of a [Russian Peat Corer](https://www.vanwalt.com/news/2014/05/15/peat-sampler-or-russian-corer-either-way-a-really-useful-sediment-sampling-tool/) (Figure \@ref(fig:russianCorer)). 
+# Introduction
+
+This page documents a pilot test on the use of a [Russian Peat Corer](https://www.vanwalt.com/news/2014/05/15/peat-sampler-or-russian-corer-either-way-a-really-useful-sediment-sampling-tool/) (Figure \@ref(fig:russianCorer)). 
 
 ```{r russianCorer}
 #| echo: false
@@ -50,6 +57,8 @@ All work belong to the [REWRITE project](https://rewriteproject.eu/).
 
 ## Sites
 
+### Bourgneuf Bay
+
 The first fieldwork was conducted in Bourgneuf Bay. Three replicates each were collected in the persistent seagrass meadow and a sandier area. All GPS positions were collected using the SW Maps version 3.0.14.3 [@SWMapsversion] on a Google Pixel 9.
 
 ```{r samplingDesignBB}
@@ -58,48 +67,82 @@ The first fieldwork was conducted in Bourgneuf Bay. Three replicates each were c
 #| message: false
 #| warning: false
 
-stations <- read_sf('data/BB/shp/photos.shp') %>%
+stations.BB <- read_sf('data/BB/shp/photos.shp') %>%
   select(!PATH) %>%
   filter(!REMARKS %in% c('Mud_1', 'non-stable site'))
 
-map_centre <- stations %>% 
+map_centre.BB <- stations.BB %>% 
   st_union() %>%
   st_centroid() %>%
   st_coordinates()
 
-pal.shp <- colorFactor(c('navy','yellow3'), domain = c('mix','slice'))
+pal.shp.BB <- colorFactor(c('navy','yellow3'), domain = c('mix','slice'))
 
-m.shp <- leaflet(stations) %>%
+m.shp.BB <- leaflet(stations.BB) %>%
   addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
-  setView(map_centre[1], map_centre[2], 15) %>%
-  addCircleMarkers(radius = 2, color = ~pal.shp(Method), fillOpacity = 1, label = ~REMARKS) %>%
-  addLegend(pal = pal.shp, values = ~Method, opacity = 1)
+  setView(map_centre.BB[1], map_centre.BB[2], 15) %>%
+  addCircleMarkers(radius = 2, color = ~pal.shp.BB(Method), fillOpacity = 1, label = ~REMARKS) %>%
+  addLegend(pal = pal.shp.BB, values = ~Method, opacity = 1)
 
-m.shp
+m.shp.BB
 ```
 
 
-<!-- Paimpol -->
+### Paimpol
 
+The second fieldwork was conducted in Paimpol. Three replicates each were collected in the seagrass meadow, which were in sandier substrates. Owing to the less penetrable nature of the substrate at deeper depths, only the 0-50 cm cores were able to be collected. All GPS positions were collected using the SW Maps version 3.0.14.3 [@SWMapsversion] on a Google Pixel 9.
 
-## Sample collection
-
-
-For each replicate, a 1-metre whole core and 1-metre subcoring core was collected. As the Russian peat corer has a sampling length of 50 cm, the 1-metre core was further split into two 50 cm samples, one at the 0-50 cm depth and the other at the 50-100 cm depth. Due to the spearhead design of the Russian peat corer, the 50-100 cm depth was sampled next to the 0-50 cm depth, rather than immediately below since the spearhead would have disrupted the area below during the coring process (Figures \@ref(fig:coringProcessMud) and \@ref(fig:coringProcessSand)). The subcoring core was sliced in the field at 10 cm per subcore and separated into different collection bags. Meanwhile, for the whole core approach, both top and bottom cores were mixed in a bucket and then transferred into a single, large collection bag. For the first and the second replicate in the sand area, the corer for the subcore could only go up to a depth of about 75 cm and 80 cm, respectively. As such, they were sampled to 70 cm and 80 cm, respectively, for both the subcore and whole core approaches to ensure consistency within a replicate (Figure \@ref(fig:coringProcessSand)).
-
-The samples were then transported to back to the laboratory and preserved in a 4 &deg;C fridge.
-
-```{r coringProcessPreprocessing}
+```{r samplingDesignPP}
 #| echo: false
 #| error: false
 #| message: false
 #| warning: false
 
-dir.photos <- list.files('data/BB/photos') %>%
+stations.PP <- read_sf('data/PP/shp/photos.shp') %>%
+  select(!PATH) %>%
+  filter(!REMARKS %in% c("seagrass another species")) %>%
+  mutate(Method = case_when(
+    grepl('slice', REMARKS) ~ 'slice',
+    grepl('mix', REMARKS) ~ 'mix'
+  ))
+
+map_centre.PP <- stations.PP %>% 
+  st_union() %>%
+  st_centroid() %>%
+  st_coordinates()
+
+pal.shp.PP <- colorFactor(c('navy','yellow3'), domain = c('mix','slice'))
+
+m.shp.PP <- leaflet(stations.PP) %>%
+  addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
+  setView(map_centre.PP[1], map_centre.PP[2], 15) %>%
+  addCircleMarkers(radius = 2, color = ~pal.shp.PP(Method), fillOpacity = 1, label = ~REMARKS) %>%
+  addLegend(pal = pal.shp.PP, values = ~Method, opacity = 1)
+
+m.shp.PP
+```
+
+
+## Sample collection
+
+For each replicate, a 1-metre whole core and 1-metre subcoring core was collected. As the Russian peat corer has a sampling length of 50 cm, the 1-metre core was further split into two 50 cm samples, one at the 0-50 cm depth and the other at the 50-100 cm depth. Due to the spearhead design of the Russian peat corer, the 50-100 cm depth was sampled next to the 0-50 cm depth, rather than immediately below since the spearhead would have disrupted the area below during the coring process (Figures \@ref(fig:coringProcessMudBB) and \@ref(fig:coringProcessSandBB)). The subcoring core was sliced in the field at 10 cm per subcore and separated into different collection bags. Meanwhile, for the whole core approach, both top and bottom cores were mixed in a bucket and then transferred into a single, large collection bag. For the first and the second replicate in the sand area, the corer for the subcore could only go up to a depth of about 75 cm and 80 cm, respectively. As such, they were sampled to 70 cm and 80 cm, respectively, for both the subcore and whole core approaches to ensure consistency within a replicate (Figure \@ref(fig:coringProcessSandBB)).
+
+The samples were then transported to back to the laboratory and preserved in a 4 &deg;C fridge.
+
+
+### Bourgneuf Bay core pictures
+
+```{r coringProcessPreprocessingBB}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+dir.photos.BB <- list.files('data/BB/photos') %>%
   paste0('data/BB/photos/', .)
 ```
 
-```{r coringProcessMud}
+```{r coringProcessMudBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -109,15 +152,14 @@ dir.photos <- list.files('data/BB/photos') %>%
 #| fig.show: 'hold'
 #| fig.cap: 'Sampled cores at the persistent seagrass meadow. Each row shows a set of replicate. The first two photographs on the left depicts the 0-50 cm and 50-100 cm cores for the subcore approach. The last two photographs on the right depicts the 0-50 m and 50-100 cm cores for the whole core approach.'
 
-dir.photos <- list.files('data/BB/photos') %>%
+photos.mud.BB <- dir.photos.BB %>%
   grep('Mud', ., value = TRUE) %>%
-  paste0('data/BB/photos/', .) %>%
   "["(c(4:1,8:5,12:9))
 
-knitr::include_graphics(dir.photos)
+knitr::include_graphics(photos.mud.BB)
 ```
 
-```{r coringProcessSand}
+```{r coringProcessSandBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -127,18 +169,46 @@ knitr::include_graphics(dir.photos)
 #| fig.show: 'hold'
 #| fig.cap: 'Sampled cores at the sandier area. Each row shows a set of replicate. The first two photographs on the left depicts the 0-50 cm and 50-100 cm cores for the subcore approach. The last two photographs on the right depicts the 0-50 m and 50-100 cm cores for the whole core approach. For the first and the second replicate, the corer for the subcore could only go up to a depth of about 75 cm and 80 cm, respectively. As such, they were sampled to 70 cm and 80 cm, respectively, for both the subcore and whole core approaches to ensure consistency within a replicate.'
 
-dir.photos <- list.files('data/BB/photos') %>%
+photos.sand.BB <- dir.photos.BB %>%
   grep('Sand', ., value = TRUE) %>%
-  paste0('data/BB/photos/', .) %>%
   "["(c(4:1,8:5,12:9))
 
-knitr::include_graphics(dir.photos)
+knitr::include_graphics(photos.sand.BB)
+```
+
+
+### Paimpol core pictures
+
+```{r coringProcessPreprocessingPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+dir.photos.PP <- list.files('data/PP/photos') %>%
+  paste0('data/PP/photos/', .)
+```
+
+```{r coringProcessSeagrassPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| out.width: "34.1%"
+#| fig.align: 'center'
+#| fig.show: 'hold'
+#| fig.cap: 'Sampled cores at the seagrass meadow. Each row shows a set of replicate. The first photograph on the left depicts the 0-50 cm cores for the subcore approach. The last photograph on the right depicts the 0-50 m cores for the whole core approach.'
+
+photos.mud.PP <- dir.photos.PP %>%
+  "["(c(2:1,4:3,6:5))
+
+knitr::include_graphics(photos.mud.PP)
 ```
 
 
 ## Sample drying and weighing
 
-Using a syringe, 20 ml of samples were obtained from each sample bag. The extracted samples were weighed before and after they were dried. For the drying process, the extracted samples were dried in an oven at 60 &deg;C for 72 hours and left to cool in a dessicator for at least one hour . Based on equation \@ref(eq:dryBulkDensity), the dry bulk density was then calculated using the weight of the dried soil and the volume extracted by the syringe [@theBlueCarbonInitiative].
+Using a syringe, 20 ml of samples were obtained from each sample bag. For Paimpol, three replicates were taken from each mixed sample. The extracted samples were weighed before and after they were dried. For the drying process, the extracted samples were dried in an oven at 60 &deg;C for 72 hours and left to cool in a dessicator for at least one hour . Based on equation \@ref(eq:dryBulkDensity), the dry bulk density was then calculated using the weight of the dried soil and the volume extracted by the syringe [@theBlueCarbonInitiative].
 
 \begin{equation}
 Dry\,bulk\,density\,(g/cm^3) = \frac{Mass\,of\,dry\,soil\,(g)}{Orignal\,volume\,sampled\,(cm^3)} (\#eq:dryBulkDensity)
@@ -155,41 +225,33 @@ The LOI was then converted to percentage organic carbon via a global equation [@
 Total\,organic\,carbon\,(\%\,C_{org}) = 0.43 \times \%\,LOI - 0.33 (\#eq:LOI)
 \end{equation}
 
-Currently, no corrections are made for inorganic carbon, in particular those arising from carbonate shells. This will be incorporated at a later stage.
-
-
-## Spatial upscaling
-
-This section will be updated when the mapping work is completed.
-
-
-## Uncertainty
-
-This section will be updated when the work is completed.
+Currently, no corrections are made for inorganic carbon, in particular those arising from carbonate shells. 
 
 
 # Results
 
 ## Dry Bulk Density
 
-```{r dryBulkDensityPreprocessing}
+### Bourgneuf Bay
+
+```{r dryBulkDensityPreprocessingBB}
 #| echo: false
 #| error: false
 #| message: false
 #| warning: false
 
-csv.dbd <- read.csv('data/BB/csv/Bourgneuf_bulkdensity.csv', sep = ';') %>%
+csv.dbd.BB <- read.csv('data/BB/csv/Bourgneuf_bulkdensity.csv', sep = ';') %>%
   filter(!is.na(slice_id)) %>%
   select(!c(Photo_ID, REC_TIME, LATITUDE, LONGITUDE))
 
 ## Although there are two entries for the whole core approach (top 0-50 cm and bottom 50-100 cm cores), 
 ## the distinction is less important here as there is no spatial analysis.
 ## Thus, the "repeat row" of the bottom core entry is removed.
-csv.dbd <- csv.dbd %>%
+csv.dbd.BB <- csv.dbd.BB %>%
   filter(!is.na(dry_weight))
 
 ## Calculations
-csv.dbd <- csv.dbd %>%
+csv.dbd.BB <- csv.dbd.BB %>%
   mutate(rep_id = paste(id, Method, sep = "_"),
          # actual weight without bottle
          soil_wet_weight = wet_weight - bottle_weight,
@@ -201,7 +263,7 @@ csv.dbd <- csv.dbd %>%
          ) %>%
   separate(id, c(NA, 'rep'), remove = FALSE)
 
-csv.dbd.average <- csv.dbd %>%
+csv.dbd.average.BB <- csv.dbd.BB %>%
   # summarise data
   group_by(id, rep_id, Method, substrate) %>%
   summarise(mean_soil_wet_weight = mean(soil_wet_weight), mean_soil_dry_weight = mean(soil_dry_weight), mean_dry_bulk_density = mean(dry_bulk_density), syringe_diameter = mean(syringe_diameter),
@@ -229,19 +291,19 @@ csv.dbd.average <- csv.dbd %>%
   ungroup()
 
 # adding the extra row for the vertical profile of the single points
-csv.dbd <- csv.dbd %>%
+csv.dbd.BB <- csv.dbd.BB %>%
   filter(Method == 'mix') %>%
   mutate(slice_start = slice_end - 10) %>%
-  rbind(csv.dbd) 
+  rbind(csv.dbd.BB) 
 
-csv.dbd <- {
+csv.dbd.BB <- {
   # add a dupe row (repeat row had NA in all values) with a different slice start for the purpose of plotting
-  t <- csv.dbd %>% 
+  t <- csv.dbd.BB %>% 
     filter(Method == 'mix') %>%
     select(-c(Method, soil_wet_weight, soil_dry_weight, dry_bulk_density, LOI))
   
   # include the averaged slice data for the purpose of plotting
-  m <- csv.dbd.average %>%
+  m <- csv.dbd.average.BB %>%
     filter(Method == 'slice') %>%
     select(id, mean_soil_wet_weight, mean_soil_dry_weight, mean_dry_bulk_density, mean_LOI) %>%
     rename_with(.fn = ~ gsub("mean_", "", .x), .cols = starts_with('mean_'))
@@ -249,17 +311,17 @@ csv.dbd <- {
   j <- right_join(t, m, by = join_by(id), relationship = 'many-to-one') %>%
     mutate(Method = 'slice_averaged')
   
-  rbind(csv.dbd, j)
+  rbind(csv.dbd.BB, j)
 }
 
 # label cleaning
-csv.dbd$Method <- factor(csv.dbd$Method, levels = c('mix', 'slice', 'slice_averaged'), labels = c('Whole core (mixed)', 'Subcoring', 'Subcoring (averaged)'))
-csv.dbd$substrate <- str_to_title(csv.dbd$substrate)
+csv.dbd.BB$Method <- factor(csv.dbd.BB$Method, levels = c('mix', 'slice', 'slice_averaged'), labels = c('Whole core (mixed)', 'Subcoring', 'Subcoring (averaged)'))
+csv.dbd.BB$substrate <- str_to_title(csv.dbd.BB$substrate)
 ```
 
-The difference in dry bulk density between the mixed whole core and the averaged slices ranged between `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:dryBulkDensityVerticalProfile)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average %>% filter(!id == 'Sand_3') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
+The difference in dry bulk density between the mixed whole core and the averaged slices ranged between `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:dryBulkDensityVerticalProfileBB)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average.BB %>% filter(!id == 'Sand_3') %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
 
-```{r dryBulkDensityVerticalProfile}
+```{r dryBulkDensityVerticalProfileBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -269,11 +331,11 @@ The difference in dry bulk density between the mixed whole core and the averaged
 #| fig.align: 'center'
 #| fig.cap: Benthic soil/substrate dry bulk density vertical profile at Bourgneuf Bay. The two different methods are represented by different colours and the averaged values of all the slices are represented by a dotted line. Any points with the presence of shells in the sample are highlighted with a solid dot.
 
-p.dbd.vertprof <- csv.dbd %>%
+p.dbd.vertprof.BB <- csv.dbd.BB %>%
   ggplot(aes(x = slice_start + 5, y = dry_bulk_density, colour = Method)) +
   geom_line(aes(linetype = Method), linewidth = 1) +
   geom_point(aes(shape = shell), size = 2.5) +
-  xlim(c(100,0)) + ylim(c(0, max(csv.dbd$dry_bulk_density))) +coord_flip() +
+  xlim(c(100,0)) + ylim(c(0, max(csv.dbd.BB$dry_bulk_density))) +coord_flip() +
   xlab('Depth (cm)') + ylab(bquote('Dry Bulk Density'~(g/cm^3))) +
   scale_colour_manual('Method', values = c('navy', 'yellow3', 'orange')) +
   scale_linetype_manual(values = c(1, 1, 2)) +
@@ -281,19 +343,10 @@ p.dbd.vertprof <- csv.dbd %>%
   facet_grid(substrate ~ rep) +
   ggtitle('Vertical profile of the benthic dry bulk density')
 
-p.dbd.vertprof
+p.dbd.vertprof.BB
 ```
 
-```{r dryBulkDensityStats}
-#| echo: false
-#| error: false
-#| message: false
-#| warning: false
-
-
-```
-
-```{r dryBulkDensityBoxplot}
+```{r dryBulkDensityBoxplotBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -303,26 +356,26 @@ p.dbd.vertprof
 #| fig.align: 'center'
 #| fig.cap: Boxplot of the dry bulk density at Bourgneuf Bay using the whole core (mixed) approach and the aggregated subcoring approach. 
 
-ylims <- csv.dbd %>%
+ylims.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% 
   select(dry_bulk_density) %>% 
   summarise(min_dbd = min(dry_bulk_density), max_dbd = max(dry_bulk_density)) %>%
   unlist()
 
-p.dbd.boxplot <- csv.dbd %>%
+p.dbd.boxplot.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   ggplot(aes(x = substrate, y = dry_bulk_density, fill = Method)) +
   geom_boxplot() +
   geom_point(aes(colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
   xlab('Sediment type') + ylab(bquote('Dry Bulk Density'~(g/cm^3))) +
-  ylim(ylims) +
+  ylim(ylims.BB) +
   scale_fill_manual('Method', values = c('lightblue3', 'yellow2')) +
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('All reps')
 
-p.dbd.boxplot.filt <- csv.dbd %>%
+p.dbd.boxplot.filt.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   filter(id != 'Sand_3') %>%
@@ -330,21 +383,21 @@ p.dbd.boxplot.filt <- csv.dbd %>%
   geom_boxplot() +
   geom_point(aes(colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
   xlab('Sediment type') + ylab(bquote('Dry Bulk Density'~(g/cm^3))) +
-  ylim(ylims) +
+  ylim(ylims.BB) +
   scale_fill_manual('Method', values = c('lightblue3', 'yellow2')) +
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('No "Sand 3"')
 
-p.dbd.boxplot + p.dbd.boxplot.filt + plot_layout(guides = 'collect', axes = 'collect')
+p.dbd.boxplot.BB + p.dbd.boxplot.filt.BB + plot_layout(guides = 'collect', axes = 'collect')
 ```
 
-```{r diffBetweenMethodspreprocessing}
+```{r diffBetweenMethodspreprocessingBB}
 #| echo: false
 #| error: false
 #| message: false
 #| warning: false
 
-csv.wide.dbd.slice <- csv.dbd %>%
+csv.wide.dbd.slice.BB <- csv.dbd.BB %>%
   group_by(id) %>%
   filter(Method != 'Subcoring (averaged)') %>%
   select(slice_id, dry_bulk_density) %>%
@@ -353,7 +406,7 @@ csv.wide.dbd.slice <- csv.dbd %>%
   mutate(across(!full, .fns = function(num) {return(subtract(num, full)/median(num)*100)})) %>%
   ungroup()
 
-csv.wide.dbd.averaged <- csv.dbd %>%
+csv.wide.dbd.averaged.BB <- csv.dbd.BB %>%
   group_by(id) %>%
   filter(Method != 'Subcoring') %>%
   select(Method, dry_bulk_density) %>%
@@ -362,23 +415,31 @@ csv.wide.dbd.averaged <- csv.dbd %>%
   mutate(diff = (`Subcoring (averaged)` - `Whole core (mixed)`)/`Subcoring (averaged)`*100) %>%
   ungroup()
 
+```
+
+```{r dryBulkDensityStatsBB}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
 ## t-test
-tTest.wide.slice <- csv.wide.dbd.slice %>%
+tTest.wide.slice.BB <- csv.wide.dbd.slice.BB %>%
   select(-full, -id) %>% 
   pivot_longer(everything()) %>%
   select(-name) %>%
   t.test()
 
-tTest.wide.averaged <- csv.wide.dbd.averaged %>%
+tTest.wide.averaged.BB <- csv.wide.dbd.averaged.BB %>%
   select(diff) %>% 
   t.test()
 ```
 
-Next, the difference in dry bulk density between the whole core (mixing) approach was investigated. The whole core's (mixing) dry bulk density was subtracted from the averaged slices of the subcoring (slice) approach. Assuming that the whole core approach is representative of the subcoring approach, the difference should be zero. Figure \@ref(fig:diffBetweenMethodsboxplot) shows that the averaged slices and the mixed approach were not significantly different (p-value = `r tTest.wide.averaged$p.value %>% format(digits = 2)`), with a confidence interval range of `r tTest.wide.averaged $conf.int[1] %>% format(digits = 2)`% to `r tTest.wide.averaged $conf.int[2] %>% format(digits = 2)`%, which includes zero.   
+Next, the difference in dry bulk density between the whole core (mixing) approach was investigated. The whole core's (mixing) dry bulk density was subtracted from the averaged slices of the subcoring (slice) approach. Assuming that the whole core approach is representative of the subcoring approach, the difference should be zero. Figure \@ref(fig:diffBetweenMethodsboxplotBB) shows that the averaged slices and the mixed approach were not significantly different (p-value = `r tTest.wide.averaged.BB$p.value %>% format(digits = 2)`), with a confidence interval range of `r tTest.wide.averaged.BB$conf.int[1] %>% format(digits = 2)`% to `r tTest.wide.averaged.BB$conf.int[2] %>% format(digits = 2)`%, which includes zero.   
 
-The median difference for the averaged slices to the mixed cores is `r csv.wide.dbd.averaged %>% select(diff) %>% unlist() %>% median(na.rm = TRUE) %>% format(digits = 2)`%. 
+The median difference for the averaged slices to the mixed cores is `r csv.wide.dbd.averaged.BB %>% select(diff) %>% unlist() %>% median(na.rm = TRUE) %>% format(digits = 2)`%. 
 
-```{r diffBetweenMethodsboxplot}
+```{r diffBetweenMethodsboxplotBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -401,11 +462,11 @@ The median difference for the averaged slices to the mixed cores is `r csv.wide.
 #     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + xlab('') +
 #     ggtitle('All slices')
 
-p.wide.averaged <- csv.wide.dbd.averaged %>%
+p.wide.averaged.BB <- csv.wide.dbd.averaged.BB %>%
   ggplot(aes(y = diff)) +
     geom_hline(yintercept = 0, colour = 'red') +
     geom_boxplot(width = 0.2) + 
-    geom_errorbar(aes(x= 0, ymin = tTest.wide.averaged$conf.int[1], ymax = tTest.wide.averaged$conf.int[2]), width = 0.1, size = 1, colour = 'green') +
+    geom_errorbar(aes(x= 0, ymin = tTest.wide.averaged.BB$conf.int[1], ymax = tTest.wide.averaged.BB$conf.int[2]), width = 0.1, size = 1, colour = 'green') +
     geom_point(aes(x = 0), position = position_jitter(width = 0.1), colour = 'blue') +
     # ylim(ylim.diff) + 
     ylab('Percent difference in dry bulk density (%)') + xlim(c(-0.25, 0.25)) +
@@ -413,16 +474,263 @@ p.wide.averaged <- csv.wide.dbd.averaged %>%
     ggtitle('Averaged slice')
 
 # p.wide.slice + 
-p.wide.averaged + 
+p.wide.averaged.BB + 
   plot_annotation('Percent difference in dry bulk density between the slice and mix methods') +
   plot_layout(axis_titles = 'collect')
 ```
 
-# TOC measurement
+### Paimpol
 
-The difference in LOI measurement between the mixed whole core and the averaged slices ranged between `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_LOI) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_LOI) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:LOIverticalprofile)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average %>% filter(!id == 'Sand_3') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
+```{r dryBulkDensityPreprocessingPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
 
-```{r LOIverticalprofile}
+csv.dbd.PP <- read.csv('data/PP/csv/Paimpol_bulkdensity.csv', sep = ';') %>%
+  filter(!is.na(slice_id)) %>%
+  select(!c(Photo_ID, REC_TIME, LATITUDE, LONGITUDE))
+
+csv.dbd.PP <- csv.dbd.PP %>%
+  filter(!is.na(dry_weight))
+
+## Calculations
+csv.dbd.PP <- csv.dbd.PP %>%
+  mutate(rep_id = paste(id, Method, sep = "_"),
+         # actual weight without bottle
+         soil_wet_weight = wet_weight - bottle_weight,
+         soil_dry_weight = dry_weight - bottle_weight,
+         # dry bulk density
+         dry_bulk_density = soil_dry_weight / 20,
+         # carbon
+         TC = 0.43 * LOI - 0.33
+         ) %>%
+  separate(id, c(NA, 'rep'), remove = FALSE)
+
+csv.dbd.average.PP <- csv.dbd.PP %>%
+  # summarise data
+  group_by(id, rep_id, Method, substrate) %>%
+  summarise(mean_soil_wet_weight = mean(soil_wet_weight), mean_soil_dry_weight = mean(soil_dry_weight), mean_dry_bulk_density = mean(dry_bulk_density), syringe_diameter = mean(syringe_diameter),
+            mean_LOI = mean(LOI), mean_TC = mean(TC)) %>%
+  ungroup() %>% 
+  # calculate differences between slice & mix
+  group_by(id) %>%
+  mutate(# calculate absolute differences
+    diff_mean_soil_wet_weight = diff(mean_soil_wet_weight), 
+    diff_mean_soil_dry_weight = diff(mean_soil_dry_weight), 
+    diff_mean_dry_bulk_density = diff(mean_dry_bulk_density),
+    diff_mean_LOI = diff(mean_LOI),
+    diff_mean_TC = diff(mean_TC),
+    # # calculate percentage differences (remove signs)
+    # percent_diff_soil_wet_weight = abs(diff_mean_soil_wet_weight/mean_soil_wet_weight)*100,
+    # percent_diff_soil_dry_weight = abs(diff_mean_soil_dry_weight/mean_soil_dry_weight)*100,
+    # percent_diff_dry_bulk_density = abs(diff_mean_dry_bulk_density/mean_dry_bulk_density)*100
+    # calculate percentage difference with reference to the sliced values
+    percent_diff_soil_wet_weight = diff_mean_soil_wet_weight/(mean_soil_wet_weight[Method == 'slice'])*100,
+    percent_diff_soil_dry_weight = diff_mean_soil_dry_weight/(mean_soil_dry_weight[Method == 'slice'])*100,
+    percent_diff_dry_bulk_density = diff_mean_dry_bulk_density/(mean_dry_bulk_density[Method == 'slice'])*100,
+    percent_diff_LOI = diff_mean_LOI/(mean_LOI[Method == 'slice'])*100,
+    percent_diff_TC = diff_mean_TC/(mean_TC[Method == 'slice'])*100
+    ) %>%
+  ungroup()
+
+# adding the extra row for the vertical profile of the single points
+csv.dbd.PP <- csv.dbd.PP %>%
+  filter(Method == 'mix') %>%
+  mutate(slice_start = slice_end - 10) %>%
+  rbind(csv.dbd.PP) 
+
+csv.dbd.PP <- {
+  # add a dupe row (repeat row had NA in all values) with a different slice start for the purpose of plotting
+  t <- csv.dbd.PP %>% 
+    filter(Method == 'mix') %>%
+    select(-c(Method, soil_wet_weight, soil_dry_weight, dry_bulk_density, LOI))
+  
+  # include the averaged slice data for the purpose of plotting
+  m <- csv.dbd.average.PP %>%
+    filter(Method == 'slice') %>%
+    select(id, mean_soil_wet_weight, mean_soil_dry_weight, mean_dry_bulk_density, mean_LOI) %>%
+    rename_with(.fn = ~ gsub("mean_", "", .x), .cols = starts_with('mean_'))
+  
+  j <- right_join(t, m, by = join_by(id), relationship = 'many-to-one') %>%
+    mutate(Method = 'slice_averaged')
+  
+  rbind(csv.dbd.PP, j)
+}
+
+# label cleaning
+csv.dbd.PP$Method <- factor(csv.dbd.PP$Method, levels = c('mix', 'slice', 'slice_averaged'), labels = c('Whole core (mixed)', 'Subcoring', 'Subcoring (averaged)'))
+csv.dbd.PP$substrate <- str_to_title(csv.dbd.PP$substrate)
+```
+
+The difference in dry bulk density between the mixed whole core and the averaged slices ranged between `r csv.dbd.average.PP %>% select(percent_diff_dry_bulk_density) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.PP %>% select(percent_diff_dry_bulk_density) %>% max() %>% format(digits = 2, nsmall = 1)`% for the seagrass meadows in Paimpol. Based on one of the cores with shells, the dry bulk density at lower depths seems to be less. However, more data for analysis is needed before a robust claim can be made.
+
+```{r dryBulkDensityVerticalProfilePP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| fig.width: 8
+#| fig.height: 6
+#| fig.align: 'center'
+#| fig.cap: Benthic soil/substrate dry bulk density vertical profile at Paimpol. The two different methods are represented by different colours and the averaged values of all the slices are represented by a dotted line. Any points with the presence of shells in the sample are highlighted with a solid dot. For the whole core approach, the horizontal error bars show the standard deviation of the dry bulk density for the whole core approach.
+
+# statistical mode function
+## obtained from https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+csv.dbd.PP.plotting <- csv.dbd.PP %>%
+  filter(grepl("full", slice_id)) %>% 
+  mutate(slice_id = 'full') %>%
+  group_by(id, rep, Method, substrate, slice_start, slice_id, slice_end, rep_id) %>%
+  summarise(# sd has to be first, as the later mutates will overwrite the original array
+            dry_weight_sd = sd(dry_weight), soil_dry_weight_sd = sd(soil_dry_weight), LOI_sd = sd(LOI), 
+            dry_bulk_density_sd = sd(dry_bulk_density), TC_sd = sd(TC),
+            # overriding original arrays into a single value
+            bottle_weight = NA, wet_weight = NA, dry_weight = mean(dry_weight), shell = Mode(shell), syringe_diameter = mean(syringe_diameter), 
+            crucible_weight = NA, preMuffleBoat_weight = NA, postMuffleBoat_weight = NA, preMuffle_weight = NA, postMuffle_weight = mean(postMuffle_weight), 
+            LOI = mean(LOI), soil_wet_weight = mean(soil_wet_weight), soil_dry_weight = mean(soil_dry_weight), 
+            dry_bulk_density = mean(dry_bulk_density), TC = mean(TC)
+            ) %>%
+  ungroup() %>%
+  rbind(csv.dbd.PP %>% 
+          filter(!grepl('full', slice_id)) %>%
+          mutate(dry_weight_sd = NA, soil_dry_weight_sd = NA, LOI_sd = NA, dry_bulk_density_sd = 0, TC_sd = NA)
+          ) 
+
+p.dbd.vertprof.PP <- csv.dbd.PP.plotting %>%
+  ggplot(aes(x = slice_start + 5, y = dry_bulk_density, colour = Method)) +
+  geom_line(aes(linetype = Method), linewidth = 1) +
+  geom_pointrange(aes(ymin = dry_bulk_density - dry_bulk_density_sd, ymax = dry_bulk_density + dry_bulk_density_sd, shape = shell)) +
+  xlim(c(50,0)) + coord_flip() + # ylim(c(0, max(csv.dbd.PP$dry_bulk_density))) +
+  xlab('Depth (cm)') + ylab(bquote('Dry Bulk Density'~(g/cm^3))) +
+  scale_colour_manual('Method', values = c('navy', 'yellow3', 'orange')) +
+  scale_linetype_manual(values = c(1, 1, 2)) +
+  scale_shape_manual('Presence\nof shell', values = c(NA, 19)) +
+  facet_grid(substrate ~ rep) +
+  ggtitle('Vertical profile of the benthic dry bulk density')
+
+p.dbd.vertprof.PP
+```
+
+```{r dryBulkDensityBoxplotPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| fig.width: 8
+#| fig.height: 6
+#| fig.align: 'center'
+#| fig.cap: Boxplot of the dry bulk density at Paimpol using the whole core (mixed) approach and the aggregated subcoring approach. 
+
+ylims.PP <- csv.dbd.PP.plotting %>%
+  filter(Method != 'Subcoring') %>%
+  filter(slice_start == 0) %>% 
+  select(dry_bulk_density) %>% 
+  summarise(min_dbd = min(dry_bulk_density), max_dbd = max(dry_bulk_density)) %>%
+  unlist()
+
+p.dbd.boxplot.PP <- csv.dbd.PP.plotting %>%
+  filter(Method != 'Subcoring') %>%
+  filter(slice_start == 0) %>% # remove dupe rows
+  ggplot(aes(x = substrate, y = dry_bulk_density, fill = Method)) +
+  geom_boxplot() +
+  geom_pointrange(aes(ymin = dry_bulk_density - dry_bulk_density_sd, ymax = dry_bulk_density + dry_bulk_density_sd, colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
+  xlab('Sediment type') + ylab(bquote('Dry Bulk Density'~(g/cm^3))) +
+  ylim(ylims.PP) +
+  scale_fill_manual('Method', values = c('lightblue3', 'yellow2')) +
+  scale_colour_manual('Method', values = c('navy', 'orange3')) +
+  ggtitle('All reps')
+
+p.dbd.boxplot.PP
+```
+
+```{r diffBetweenMethodspreprocessingPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+csv.wide.dbd.slice.PP <- csv.dbd.PP %>%
+  group_by(id) %>%
+  filter(Method != 'Subcoring (averaged)') %>%
+  select(slice_id, dry_bulk_density) %>%
+  distinct() %>%
+  pivot_wider(values_from = dry_bulk_density, names_from = slice_id) %>%
+  mutate(full = mean(full_rep1, full_rep2, full_rep3), full_sd = sd(c(full_rep1, full_rep2, full_rep3))) %>%
+  mutate(across(!c(full_rep1, full_rep2, full_rep3, full, full_sd), .fns = function(num) {return(subtract(num, full)/median(num)*100)})) %>%
+  ungroup()
+
+csv.wide.dbd.averaged.PP <- csv.dbd.PP %>%
+  group_by(id) %>%
+  filter(Method != 'Subcoring') %>%
+  select(Method, dry_bulk_density) %>%
+  distinct() %>%
+  group_by(id, Method) %>%
+  summarise(dry_bulk_density = mean(dry_bulk_density)) %>%
+  ungroup() %>%
+  pivot_wider(values_from = dry_bulk_density, names_from = Method) %>%
+  mutate(diff = (`Subcoring (averaged)` - `Whole core (mixed)`)/`Subcoring (averaged)`*100) %>%
+  ungroup()
+```
+
+```{r dryBulkDensityStatsPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+## t-test
+tTest.wide.slice.PP <- csv.wide.dbd.slice.PP %>%
+  select(-full, -id) %>% 
+  pivot_longer(everything()) %>%
+  select(-name) %>%
+  t.test()
+
+tTest.wide.averaged.PP <- csv.wide.dbd.averaged.PP %>%
+  select(diff) %>% 
+  t.test()
+```
+
+Next, the difference in dry bulk density between the whole core (mixing) approach was investigated. The whole core's (mixing) dry bulk density was subtracted from the averaged slices of the subcoring (slice) approach. Assuming that the whole core approach is representative of the subcoring approach, the difference should be zero. Figure \@ref(fig:diffBetweenMethodsboxplotPP) shows that the averaged slices and the mixed approach were not significantly different (p-value = `r tTest.wide.averaged.PP$p.value %>% format(digits = 2)`), with a confidence interval range of `r tTest.wide.averaged.PP$conf.int[1] %>% format(digits = 2)`% to `r tTest.wide.averaged.PP$conf.int[2] %>% format(digits = 2)`%, which includes zero.   
+
+The median difference for the averaged slices to the mixed cores is `r csv.wide.dbd.averaged.BB %>% select(diff) %>% unlist() %>% median(na.rm = TRUE) %>% format(digits = 2)`%. 
+
+```{r diffBetweenMethodsboxplotPP}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| fig.align: 'center'
+#| fig.cap: Boxplot of the percent difference in dry bulk density at Paimpol based on subtracting the dry bulk density of the whole core approach from the averaged slices of the subcoring approach, and then taking the median slice dry bulk density as a reference. The blue points are the actual difference values, while the red line is the y-intercept at zero, and the green error bars are the 95% confidence interval. The asterisk denotes a significant difference where the true mean of these difference values is not equal to zero.
+
+p.wide.averaged.PP <- csv.wide.dbd.averaged.PP %>%
+  ggplot(aes(y = diff)) +
+    geom_hline(yintercept = 0, colour = 'red') +
+    geom_boxplot(width = 0.2) + 
+    geom_errorbar(aes(x= 0, ymin = tTest.wide.averaged.BB$conf.int[1], ymax = tTest.wide.averaged.BB$conf.int[2]), width = 0.1, size = 1, colour = 'green') +
+    geom_point(aes(x = 0), position = position_jitter(width = 0.1), colour = 'blue') +
+    # ylim(ylim.diff) + 
+    ylab('Percent difference in dry bulk density (%)') + xlim(c(-0.25, 0.25)) +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + xlab('') +
+    ggtitle('Averaged slice')
+
+p.wide.averaged.PP + 
+  plot_annotation('Percent difference in dry bulk density between the slice and mix methods') +
+  plot_layout(axis_titles = 'collect')
+```
+
+
+## TOC measurement
+
+### Bourgneuf Bay
+
+The difference in LOI measurement between the mixed whole core and the averaged slices ranged between `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_LOI) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_LOI) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there was a huge difference in the 'Sand 3' replicate (Figure \@ref(fig:LOIverticalprofileBB)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average.BB %>% filter(!id == 'Sand_3') %>% select(percent_diff_LOI) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
+
+```{r LOIverticalprofileBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -432,11 +740,11 @@ The difference in LOI measurement between the mixed whole core and the averaged 
 #| fig.align: 'center'
 #| fig.cap: Benthic soil/substrate LOI measurement vertical profile at Bourgneuf Bay. The two different methods are represented by different colours and the averaged values of all the slices are represented by a dotted line. Any points with the presence of shells in the sample are highlighted with a solid dot.
 #
-p.loi.vertprof <- csv.dbd %>%
+p.loi.vertprof.BB <- csv.dbd.BB %>%
   ggplot(aes(x = slice_start + 5, y = LOI, colour = Method)) +
   geom_line(aes(linetype = Method), linewidth = 1) +
   geom_point(aes(shape = shell), size = 2.5) +
-  xlim(c(100,0)) + ylim(c(0, max(csv.dbd$LOI))) +coord_flip() +
+  xlim(c(100,0)) + ylim(c(0, max(csv.dbd.BB$LOI))) +coord_flip() +
   xlab('Depth (cm)') + ylab('Loss on ignition (% loss)') +
   scale_colour_manual('Method', values = c('navy', 'yellow3', 'orange')) +
   scale_linetype_manual(values = c(1, 1, 2)) +
@@ -444,19 +752,10 @@ p.loi.vertprof <- csv.dbd %>%
   facet_grid(substrate ~ rep) +
   ggtitle('Vertical profile of the organic carbon (LOI)')
 
-p.loi.vertprof
+p.loi.vertprof.BB
 ```
 
-```{r LOIStats}
-#| echo: false
-#| error: false
-#| message: false
-#| warning: false
-
-
-```
-
-```{r LOIBoxplot}
+```{r LOIBoxplotBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -466,14 +765,14 @@ p.loi.vertprof
 #| fig.align: 'center'
 #| fig.cap: Boxplot of the LOI at Bourgneuf Bay using the whole core (mixed) approach and the aggregated subcoring approach. 
 
-ylims <- csv.dbd %>%
+ylims <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% 
   select(LOI) %>% 
   summarise(min_dbd = min(LOI), max_dbd = max(LOI)) %>%
   unlist()
 
-p.loi.boxplot <- csv.dbd %>%
+p.loi.boxplot.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   ggplot(aes(x = substrate, y = LOI, fill = Method)) +
@@ -485,7 +784,7 @@ p.loi.boxplot <- csv.dbd %>%
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('All reps')
 
-p.loi.boxplot.filt <- csv.dbd %>%
+p.loi.boxplot.filt.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   filter(id != 'Sand_3') %>%
@@ -498,12 +797,12 @@ p.loi.boxplot.filt <- csv.dbd %>%
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('No "Sand 3"')
 
-p.loi.boxplot + p.loi.boxplot.filt + plot_layout(guides = 'collect', axes = 'collect')
+p.loi.boxplot.BB + p.loi.boxplot.filt.BB + plot_layout(guides = 'collect', axes = 'collect')
 ```
 
-The difference in total carbon (TC) measurement between the mixed whole core and the averaged slices ranged between `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_TC) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'mud') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_TC) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average %>% filter(substrate == 'sand') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there seems to be a misfit between 'Sand 3' and the chosen global equation for deriving TC from LOI, as a negative TC was derived (Figure \@ref(fig:TCverticalprofile)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average %>% filter(!id == 'Sand_3') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
+The difference in total carbon (TC) measurement between the mixed whole core and the averaged slices ranged between `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_TC) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'mud') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`% for the persistent seagrass meadow with muddy substrate and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_TC) %>% min() %>% format(digits = 2, nsmall = 1)`% and `r csv.dbd.average.BB %>% filter(substrate == 'sand') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`% for the sandy substrate. Notably, there seems to be a misfit between 'Sand 3' and the chosen global equation for deriving TC from LOI, as a negative TC was derived (Figure \@ref(fig:TCverticalprofileBB)). When 'Sand 3' is excluded, the largest difference is `r csv.dbd.average.BB %>% filter(!id == 'Sand_3') %>% select(percent_diff_TC) %>% max() %>% format(digits = 2, nsmall = 1)`%. The presence of shells in the slices did not cause any seemingly anomalous patterns to the vertical profile.
 
-```{r TCverticalprofile}
+```{r TCverticalprofileBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -513,11 +812,11 @@ The difference in total carbon (TC) measurement between the mixed whole core and
 #| fig.align: 'center'
 #| fig.cap: Benthic soil/substrate derived TC vertical profile at Bourgneuf Bay. The two different methods are represented by different colours and the averaged values of all the slices are represented by a dotted line. Any points with the presence of shells in the sample are highlighted with a solid dot.
 #
-p.tc.vertprof <- csv.dbd %>%
+p.tc.vertprof.BB <- csv.dbd.BB %>%
   ggplot(aes(x = slice_start + 5, y = TC, colour = Method)) +
   geom_line(aes(linetype = Method), linewidth = 1) +
   geom_point(aes(shape = shell), size = 2.5) +
-  xlim(c(100,0)) + ylim(c(0, max(csv.dbd$LOI))) +coord_flip() +
+  xlim(c(100,0)) + ylim(c(0, max(csv.dbd.BB$LOI))) +coord_flip() +
   xlab('Depth (cm)') + ylab(bquote('Derived total carbon '~("\u0025C"["org"]))) + 
   scale_colour_manual('Method', values = c('navy', 'yellow3', 'orange')) +
   scale_linetype_manual(values = c(1, 1, 2)) +
@@ -525,19 +824,10 @@ p.tc.vertprof <- csv.dbd %>%
   facet_grid(substrate ~ rep) +
   ggtitle('Vertical profile of the organic carbon (TC)')
 
-p.tc.vertprof
+p.tc.vertprof.BB
 ```
 
-```{r TCStats}
-#| echo: false
-#| error: false
-#| message: false
-#| warning: false
-
-
-```
-
-```{r TCBoxplot}
+```{r TCBoxplotBB}
 #| echo: false
 #| error: false
 #| message: false
@@ -547,26 +837,26 @@ p.tc.vertprof
 #| fig.align: 'center'
 #| fig.cap: Boxplot of the TC at Bourgneuf Bay using the whole core (mixed) approach and the aggregated subcoring approach. 
 
-ylims <- csv.dbd %>%
+ylims.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% 
   select(TC) %>% 
   summarise(min_dbd = min(TC), max_dbd = max(TC)) %>%
   unlist()
 
-p.loi.boxplot <- csv.dbd %>%
+p.loi.boxplot.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   ggplot(aes(x = substrate, y = TC, fill = Method)) +
   geom_boxplot() +
   geom_point(aes(colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
   xlab('Sediment type') + ylab(bquote('Derived total carbon '~("\u0025C"["org"]))) + 
-  ylim(ylims) +
+  ylim(ylims.BB) +
   scale_fill_manual('Method', values = c('lightblue3', 'yellow2')) +
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('All reps')
 
-p.loi.boxplot.filt <- csv.dbd %>%
+p.loi.boxplot.filt.BB <- csv.dbd.BB %>%
   filter(Method != 'Subcoring') %>%
   filter(slice_start == 0) %>% # remove dupe rows
   filter(id != 'Sand_3') %>%
@@ -574,16 +864,22 @@ p.loi.boxplot.filt <- csv.dbd %>%
   geom_boxplot() +
   geom_point(aes(colour = Method), position = position_jitterdodge(jitter.width = 0.5), show.legend = FALSE) +
   xlab('Sediment type') + ylab(bquote('Derived total carbon '~("\u0025C"["org"]))) + 
-  ylim(ylims) +
+  ylim(ylims.BB) +
   scale_fill_manual('Method', values = c('lightblue3', 'yellow2')) +
   scale_colour_manual('Method', values = c('navy', 'orange3')) +
   ggtitle('No "Sand 3"')
 
-p.loi.boxplot + p.loi.boxplot.filt + plot_layout(guides = 'collect', axes = 'collect')
+p.loi.boxplot.BB + p.loi.boxplot.filt.BB + plot_layout(guides = 'collect', axes = 'collect')
 ```
 
-## Spatial upscaling
+### Paimpol
 
-This section will be updated when the mapping work is completed.
+Work in progress.
+
+
+# Future Work
+
+More to come!
+
 
 # References
