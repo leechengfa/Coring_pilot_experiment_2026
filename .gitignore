@@ -2,16 +2,3 @@
 .Rhistory
 .RData
 .Ruserdata
-
-## datasets that do not belong to me
-data/Freq_above_Laurent
-data/Candidate_areas
-gif
-
-## Planning documents not currently meant for release
-Sample_planning.xlsx
-Internal_proposal_coring.docx
-coring_experiment.docx
-Presentation_soil_blue_carbon.pptx
-Historical_spc_exploration.R
-data/BB/shp/accumulation_Jul_26*
